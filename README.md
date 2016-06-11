@@ -1,4 +1,4 @@
-Smuggler: read STRATA, SPSS, SAS data sets from Python
+Smuggler: read STATA, SPSS, SAS data sets from Python
 ===
 
 Smuggler enables you to load the data sets of stats packages as pandas DataFrame using [ReadStat](https://github.com/WizardMac/ReadStat) C library written by [Evan Miller](http://www.evanmiller.org).
@@ -21,6 +21,11 @@ Installation
 $ python setup.py build install
 ```
 
+Requirement
+---
+
+- pandas
+- numpy
 
 Usage
 ---
