@@ -43,3 +43,4 @@ TODO
 - Make test suites (currently I just checked with a few files).
 - Support reading RDS and Rdata
 - Support writing dta and sav
+- Create a wheel for Windows
