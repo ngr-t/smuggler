@@ -35,6 +35,118 @@ struct module_state {
 static struct module_state _state;
 #endif
 
+void set_error(readstat_error_t error) {
+	const char * message;
+	switch(error) {
+    	case READSTAT_ERROR_OPEN:
+    		message = "Open.";
+    		break;
+    	case READSTAT_ERROR_READ:
+    		message = "Read.";
+    		break;
+    	case READSTAT_ERROR_MALLOC:
+    		message = "Malloc.";
+    		break;
+    	case READSTAT_ERROR_USER_ABORT:
+    		message = "User abort.";
+    		break;
+    	case READSTAT_ERROR_PARSE:
+    		message = "Parse.";
+    		break;
+    	case READSTAT_ERROR_UNSUPPORTED_COMPRESSION:
+    		message = "Unsupported compression.";
+    		break;
+    	case READSTAT_ERROR_UNSUPPORTED_CHARSET:
+    		message = "Unsupported charset.";
+    		break;
+    	case READSTAT_ERROR_COLUMN_COUNT_MISMATCH:
+    		message = "Column count mismatch.";
+    		break;
+    	case READSTAT_ERROR_ROW_COUNT_MISMATCH:
+    		message = "Row count mismatch.";
+    		break;
+    	case READSTAT_ERROR_ROW_WIDTH_MISMATCH:
+    		message = "Row width mismatch.";
+    		break;
+    	case READSTAT_ERROR_BAD_FORMAT_STRING:
+    		message = "Bad format string.";
+    		break;
+    	case READSTAT_ERROR_VALUE_TYPE_MISMATCH:
+    		message = "Value type mismatch.";
+    		break;
+    	case READSTAT_ERROR_WRITE:
+    		message = "Write.";
+    		break;
+    	case READSTAT_ERROR_WRITER_NOT_INITIALIZED:
+    		message = "Writer not initialized.";
+    		break;
+    	case READSTAT_ERROR_SEEK:
+    		message = "Seek.";
+    		break;
+    	case READSTAT_ERROR_CONVERT:
+    		message = "Convert.";
+    		break;
+    	case READSTAT_ERROR_CONVERT_BAD_STRING:
+    		message = "Convert bad string.";
+    		break;
+    	case READSTAT_ERROR_CONVERT_SHORT_STRING:
+    		message = "Convert short string.";
+    		break;
+    	case READSTAT_ERROR_CONVERT_LONG_STRING:
+    		message = "Convert long string.";
+    		break;
+    	case READSTAT_ERROR_NUMERIC_VALUE_IS_OUT_OF_RANGE:
+    		message = "Numeric value is out of range.";
+    		break;
+    	case READSTAT_ERROR_TAGGED_VALUE_IS_OUT_OF_RANGE:
+    		message = "Tagged value is out of range.";
+    		break;
+    	case READSTAT_ERROR_STRING_VALUE_IS_TOO_LONG:
+    		message = "String value is too long.";
+    		break;
+    	case READSTAT_ERROR_TAGGED_VALUES_NOT_SUPPORTED:
+    		message = "Tagged values not supported.";
+    		break;
+    	case READSTAT_ERROR_UNSUPPORTED_FILE_FORMAT_VERSION:
+    		message = "Unsupported file format version.";
+    		break;
+    	case READSTAT_ERROR_NAME_BEGINS_WITH_ILLEGAL_CHARACTER:
+    		message = "Name begins with illegal character.";
+    		break;
+    	case READSTAT_ERROR_NAME_CONTAINS_ILLEGAL_CHARACTER:
+    		message = "Name contains illegal character.";
+    		break;
+    	case READSTAT_ERROR_NAME_IS_RESERVED_WORD:
+    		message = "Name is reserved word.";
+    		break;
+    	case READSTAT_ERROR_NAME_IS_TOO_LONG:
+    		message = "Name is too long.";
+    		break;
+    	case READSTAT_ERROR_BAD_TIMESTAMP:
+    		message = "Bad timestamp.";
+    		break;
+    	case READSTAT_ERROR_BAD_FREQUENCY_WEIGHT:
+    		message = "Bad frequency weight.";
+    		break;
+    	case READSTAT_ERROR_TOO_MANY_MISSING_VALUE_DEFINITIONS:
+    		message = "Too many missing value definitions.";
+    		break;
+    	case READSTAT_ERROR_NOTE_IS_TOO_LONG:
+    		message = "Note is too long.";
+    		break;
+    	case READSTAT_ERROR_STRING_REFS_NOT_SUPPORTED:
+    		message = "String refs not supported.";
+    		break;
+    	case READSTAT_ERROR_STRING_REF_IS_REQUIRED:
+    		message = "String ref is required.";
+    		break;
+    	case READSTAT_ERROR_ROW_IS_TOO_WIDE_FOR_PAGE:
+    		message = "Row is too wide for page.";
+    		break;
+	}
+	PyErr_SetString(PyExc_RuntimeError, message);
+}
+
 /*
  * Function: handle_info
  * -------------------------
@@ -82,24 +194,12 @@ static int handle_variable(
 	PyObject *name = PyUnicode_FromString(readstat_variable_get_name(variable));
 
 	PyObject * array = NULL;
-	readstat_types_t type = readstat_variable_get_type(variable);
+	readstat_type_t type = readstat_variable_get_type(variable);
 	npy_intp dims[] = {(npy_intp) df->n_obs};
 
 	switch (type) {
 	    case READSTAT_TYPE_STRING:
 	    	array = PyArray_SimpleNew(1, dims, NPY_OBJECT);
-		    break;
-	    case READSTAT_TYPE_CHAR:
-	    	if (readstat_variable_get_missing_ranges_count(variable)) {
-	    		/* If there are missing values in the variable,
-	    		 * set dtype to NPY_DOUBLE.
-	    		 * This is due to the current Pandas implementation
-	    		 * that uses NaN to denote missing data.
-	    		 */
-		    	array = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-	    	} else{
-   		    	array = PyArray_SimpleNew(1, dims, NPY_INT8);
-	    	}
 		    break;
 	    case READSTAT_TYPE_INT16:
 	    	if (readstat_variable_get_missing_ranges_count(variable)) {
@@ -127,7 +227,7 @@ static int handle_variable(
 	    case READSTAT_TYPE_DOUBLE:
 	    	array = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
 		    break;
-	    case READSTAT_TYPE_LONG_STRING:
+	    case READSTAT_TYPE_STRING_REF:
 	    	array = PyArray_SimpleNew(1, dims, NPY_OBJECT);
 		    break;
 		default:
@@ -156,19 +256,13 @@ static int handle_variable(
 static int handle_value(int obs_index, int var_index, readstat_value_t value, void *ctx) {
 	dataframe_t * df = (dataframe_t *) ctx;
     PyArrayObject *array = (PyArrayObject *) PyTuple_GET_ITEM(PyList_GET_ITEM(df->name_array_pairs, var_index), 1);
-    readstat_types_t type = readstat_value_type(value);
+    readstat_type_t type = readstat_value_type(value);
     void *itemptr = PyArray_GETPTR1(array, obs_index);
     PyObject *obj = NULL;
-    if (!readstat_value_is_missing(value)) {
+    if (!readstat_value_is_system_missing(value)) {
 		switch (type) {
 		    case READSTAT_TYPE_STRING:
 		    	obj = PyUnicode_FromString(readstat_string_value(value));
-			    break;
-		    case READSTAT_TYPE_LONG_STRING:
-		    	obj = PyUnicode_FromString(readstat_string_value(value));
-				break;
-		    case READSTAT_TYPE_CHAR:
-		    	obj = PyLong_FromLong(readstat_char_value(value));
 			    break;
 		    case READSTAT_TYPE_INT16:
 		    	obj = PyLong_FromLong(readstat_int16_value(value));
@@ -182,6 +276,9 @@ static int handle_value(int obs_index, int var_index, readstat_value_t value, vo
 		    case READSTAT_TYPE_DOUBLE:
 		    	obj = PyFloat_FromDouble(readstat_double_value(value));
 			    break;
+		    case READSTAT_TYPE_STRING_REF:
+		    	obj = PyUnicode_FromString(readstat_string_value(value));
+				break;
 			default:
 				return -1;
 		}
@@ -222,14 +319,22 @@ static PyObject * run_parse(
 	readstat_set_variable_handler(parser, &handle_variable);
 	readstat_set_value_handler(parser, &handle_value);
 	error = parse_func(parser, filename, &result);
+	if (error != READSTAT_OK) {
+		set_error(error);
+		return NULL;
+	}
 	readstat_parser_free(parser);
 
 	/* Convert items into pandas.DataFrame. */
 	PyObject * pandas = PyImport_Import(PyUnicode_FromString("pandas"));
-	PyObject * from_items = PyObject_GetAttrString(
-		PyObject_GetAttrString(pandas, "DataFrame"),
-		"from_items");
-	return PyObject_CallObject(from_items, PyTuple_Pack(1, result.name_array_pairs));
+	if (NULL == pandas) return NULL;
+	PyObject * data_frame = PyObject_GetAttrString(pandas, "DataFrame");
+	if (NULL == data_frame) return NULL;
+	PyObject * from_items = PyObject_GetAttrString(data_frame, "from_items");
+	if (NULL == from_items) return NULL;
+	PyObject * name_array_pairs = PyTuple_Pack(1, result.name_array_pairs);
+	if (NULL == name_array_pairs) return NULL;
+	return PyObject_CallObject(from_items, name_array_pairs);
 };
 
 
