@@ -253,9 +253,12 @@ static int handle_variable(
  *   2. inserts the pair into the list in ctx at index.
  *
  */
-static int handle_value(int obs_index, int var_index, readstat_value_t value, void *ctx) {
+static int handle_value(int obs_index, const readstat_variable_t * variable, readstat_value_t value, void *ctx) {
 	dataframe_t * df = (dataframe_t *) ctx;
-    PyArrayObject *array = (PyArrayObject *) PyTuple_GET_ITEM(PyList_GET_ITEM(df->name_array_pairs, var_index), 1);
+	PyObject * var_array = PyList_GET_ITEM(df->name_array_pairs, variable->index);
+    if (NULL == var_array) return NULL;
+    PyArrayObject *array = (PyArrayObject *) PyTuple_GET_ITEM(var_array, 1);
+    if (NULL == array) return NULL;
     readstat_type_t type = readstat_value_type(value);
     void *itemptr = PyArray_GETPTR1(array, obs_index);
     PyObject *obj = NULL;
@@ -315,9 +318,9 @@ static PyObject * run_parse(
 	readstat_parser_t *parser = readstat_parser_init();
 
 
-	readstat_set_info_handler(parser, &handle_info);
-	readstat_set_variable_handler(parser, &handle_variable);
-	readstat_set_value_handler(parser, &handle_value);
+	if (-1 == readstat_set_info_handler(parser, &handle_info)) return NULL;
+	if (-1 == readstat_set_variable_handler(parser, &handle_variable)) return NULL;
+	if (-1 == readstat_set_value_handler(parser, &handle_value)) return NULL;
 	error = parse_func(parser, filename, &result);
 	if (error != READSTAT_OK) {
 		set_error(error);
