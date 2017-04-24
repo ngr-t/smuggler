@@ -14,7 +14,7 @@
 #define UNISTD_OPEN_OPTIONS O_RDONLY
 #endif
 
-#if defined _WIN32 || defined __CYGWIN__ || defined _AIX
+#if defined _WIN32 || defined _AIX
 #define lseek lseek64
 #endif
 
@@ -35,17 +35,19 @@ int unistd_close_handler(void *io_ctx) {
 
 readstat_off_t unistd_seek_handler(readstat_off_t offset,
         readstat_io_flags_t whence, void *io_ctx) {
-    int flag;
+    int flag = 0;
     switch(whence) {
-    case READSTAT_SEEK_SET:
-        flag = SEEK_SET;
-        break;
-    case READSTAT_SEEK_CUR:
-        flag = SEEK_CUR;
-        break;
-    case READSTAT_SEEK_END:
-        flag = SEEK_END;
-        break;
+        case READSTAT_SEEK_SET:
+            flag = SEEK_SET;
+            break;
+        case READSTAT_SEEK_CUR:
+            flag = SEEK_CUR;
+            break;
+        case READSTAT_SEEK_END:
+            flag = SEEK_END;
+            break;
+        default:
+            return -1;
     }
     int fd = ((unistd_io_ctx_t*) io_ctx)->fd;
     return lseek(fd, offset, flag);
@@ -67,7 +69,7 @@ readstat_error_t unistd_update_handler(long file_size,
     long current_offset = lseek(fd, 0, SEEK_CUR);
 
     if (current_offset == -1)
-        return READSTAT_ERROR_READ;
+        return READSTAT_ERROR_SEEK;
 
     if (progress_handler(1.0 * current_offset / file_size, user_ctx))
         return READSTAT_ERROR_USER_ABORT;
@@ -85,16 +87,4 @@ void unistd_io_init(readstat_parser_t *parser) {
     unistd_io_ctx_t *io_ctx = calloc(1, sizeof(unistd_io_ctx_t));
     io_ctx->fd = -1;
     readstat_set_io_ctx(parser, (void*) io_ctx);
-}
-
-void unistd_io_init_rdata(rdata_parser_t *parser) {
-    rdata_set_open_handler(parser, unistd_open_handler);
-    rdata_set_close_handler(parser, unistd_close_handler);
-    rdata_set_seek_handler(parser, unistd_seek_handler);
-    rdata_set_read_handler(parser, unistd_read_handler);
-    rdata_set_update_handler(parser, unistd_update_handler);
-
-    unistd_io_ctx_t *io_ctx = calloc(1, sizeof(unistd_io_ctx_t));
-    io_ctx->fd = -1;
-    rdata_set_io_ctx(parser, (void*) io_ctx);
 }
