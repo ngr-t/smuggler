@@ -39,19 +39,19 @@ void set_error(readstat_error_t error) {
 	const char * message;
 	switch(error) {
     	case READSTAT_ERROR_OPEN:
-    		message = "Open.";
+    		message = "Open error.";
     		break;
     	case READSTAT_ERROR_READ:
-    		message = "Read.";
+    		message = "Read error.";
     		break;
     	case READSTAT_ERROR_MALLOC:
-    		message = "Malloc.";
+    		message = "Malloc error.";
     		break;
     	case READSTAT_ERROR_USER_ABORT:
     		message = "User abort.";
     		break;
     	case READSTAT_ERROR_PARSE:
-    		message = "Parse.";
+    		message = "Parse error.";
     		break;
     	case READSTAT_ERROR_UNSUPPORTED_COMPRESSION:
     		message = "Unsupported compression.";
@@ -75,16 +75,16 @@ void set_error(readstat_error_t error) {
     		message = "Value type mismatch.";
     		break;
     	case READSTAT_ERROR_WRITE:
-    		message = "Write.";
+    		message = "Write error.";
     		break;
     	case READSTAT_ERROR_WRITER_NOT_INITIALIZED:
     		message = "Writer not initialized.";
     		break;
     	case READSTAT_ERROR_SEEK:
-    		message = "Seek.";
+    		message = "Seek error.";
     		break;
     	case READSTAT_ERROR_CONVERT:
-    		message = "Convert.";
+    		message = "Convert error.";
     		break;
     	case READSTAT_ERROR_CONVERT_BAD_STRING:
     		message = "Convert bad string.";
