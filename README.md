@@ -8,10 +8,11 @@ Supported formats are below.
 - STATA dta file
 - SPSS sav file
 - SPSS por file
-- ~~SAS sas7bcat file~~ (currently this has some problem, although readstat supports the format)
 - SAS sas7bdat file
 
 Some of them are already supported in pandas, so I want to compare the performance.
+
+SAS catalog format (.sas7bcat) is unavailable though ReadStat library can read them.
 
 
 Installation
@@ -33,7 +34,6 @@ Usage
 - STATA dta file: read_dta("path/to/file")
 - SPSS sav file: read_sav("path/to/file")
 - SPSS por file: read_por("path/to/file")
-- ~~SAS sas7bcat file: read_sas7bcat("path/to/file")~~
 - SAS sas7bdat file: read_sas7bdat("path/to/file")
 
 
