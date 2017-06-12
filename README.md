@@ -1,6 +1,6 @@
 Smuggler: read STATA, SPSS, SAS data sets from Python
 ===
-_Sorry, but I don't have strong motivation to maintain this package because currently I don't use this kind of data format. O don't recommend to use this for practical use because it has problems such as memory leak or segfault._
+_Sorry, but I don't have strong motivation to maintain this package because currently I don't use this kind of data format. I don't recommend to use this for practical use because it has problems such as memory leak or segfault._
 
 Smuggler enables you to load the data sets of stats packages as pandas DataFrame using [ReadStat](https://github.com/WizardMac/ReadStat) C library written by [Evan Miller](http://www.evanmiller.org).
 
